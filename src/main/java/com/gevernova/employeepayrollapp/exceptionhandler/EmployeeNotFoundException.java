@@ -1,4 +1,4 @@
-package com.gevernova.employeepayrollapp.entity;
+package com.gevernova.employeepayrollapp.exceptionhandler;
 
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.http.HttpStatus;
