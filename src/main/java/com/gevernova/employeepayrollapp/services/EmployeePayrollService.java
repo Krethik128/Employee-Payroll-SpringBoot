@@ -3,6 +3,7 @@ package com.gevernova.employeepayrollapp.services;
 import com.gevernova.employeepayrollapp.dto.EmployeeRequestDTO; // Using RequestDTO
 import com.gevernova.employeepayrollapp.exceptionhandler.EmployeeNotFoundException;
 import com.gevernova.employeepayrollapp.entity.EmployeePayrollData;
+import com.gevernova.employeepayrollapp.mapper.EmployeeMapper;
 import com.gevernova.employeepayrollapp.repositories.EmployeePayrollRepository; // Only this repository needed
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // For transactional operations
@@ -14,11 +15,13 @@ import java.util.logging.Logger;
 public class EmployeePayrollService implements IEmployeePayrollService {
 
     private final EmployeePayrollRepository employeePayrollRepository;
+    private final RabbitMQProducer rabbitMQProducer;
     private static final Logger logger = Logger.getLogger(EmployeePayrollService.class.getName());
 
     // Only EmployeePayrollRepository is injected now
-    public EmployeePayrollService(EmployeePayrollRepository employeePayrollRepository) {
+    public EmployeePayrollService(EmployeePayrollRepository employeePayrollRepository, RabbitMQProducer rabbitMQProducer) {
         this.employeePayrollRepository = employeePayrollRepository;
+        this.rabbitMQProducer = rabbitMQProducer;
         logger.info("EmployeePayrollService initialized.");
     }
 
@@ -47,13 +50,12 @@ public class EmployeePayrollService implements IEmployeePayrollService {
     public EmployeePayrollData createEmployeePayrollData(EmployeeRequestDTO requestDTO) {
         logger.info("Attempting to create a new employee with details: " + requestDTO.getName());
         // Map RequestDTO to EmployeePayrollData
-        EmployeePayrollData employeePayrollData = new EmployeePayrollData(
-                requestDTO.getName(),
-                requestDTO.getSalary(),
-                requestDTO.getPhoneNumber(),
-                requestDTO.getSkills()
-        );
-        EmployeePayrollData savedEmployee = employeePayrollRepository.save(employeePayrollData);
+        EmployeePayrollData employee = EmployeeMapper.toEntity(requestDTO);
+        EmployeePayrollData savedEmployee = employeePayrollRepository.save(employee);
+
+        // Send notification to RabbitMQ
+        rabbitMQProducer.sendEmployeeCreationNotification(savedEmployee.getEmail(), savedEmployee.getName());
+
         logger.info("Successfully created new employee with ID: " + savedEmployee.getEmployeeId() + " and name: " + savedEmployee.getName());
         return savedEmployee;
     }
@@ -68,15 +70,10 @@ public class EmployeePayrollService implements IEmployeePayrollService {
                     return new EmployeeNotFoundException("Employee with ID: " + empId + " not found for update.");
                 });
 
-        // Update all fields from the RequestDTO
-        existingEmployee.setName(requestDTO.getName());
-        existingEmployee.setSalary(requestDTO.getSalary());
-        existingEmployee.setPhoneNumber(requestDTO.getPhoneNumber());
-        existingEmployee.setSkills(requestDTO.getSkills()); // Update the skills list
+        EmployeeMapper.updateEntityFromDTO(requestDTO, existingEmployee); // Update existingEmployee from requestDTO
 
-        EmployeePayrollData updatedEmployee = employeePayrollRepository.save(existingEmployee);
-        logger.info("Successfully updated employee with ID: " + empId + " to name: " + updatedEmployee.getName());
-        return updatedEmployee;
+        logger.info("Successfully updated employee with ID: " + empId + " to name: " + existingEmployee.getName());
+        return employeePayrollRepository.save(existingEmployee);
     }
 
     @Override

@@ -43,11 +43,15 @@ public class EmployeePayrollData {
     @CollectionTable(name = "employee_skills", joinColumns = @JoinColumn(name = "employee_id"))
     private List<String> skills;
 
-    public EmployeePayrollData(String name, long salary, String phoneNumber, List<String> skills) {
+    @Column(name = "email")
+    private String email;
+
+    public EmployeePayrollData(String name, long salary, String phoneNumber, List<String> skills, String email) {
         this.name = name;
         this.salary = salary;
         this.phoneNumber = phoneNumber;
         this.skills = skills;
+        this.email = email;
     }
 
     public EmployeePayrollData(String name, long salary) {
