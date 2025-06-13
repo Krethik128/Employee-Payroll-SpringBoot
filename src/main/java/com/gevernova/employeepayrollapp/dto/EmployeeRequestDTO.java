@@ -29,4 +29,7 @@ public class EmployeeRequestDTO {
     @NotNull(message = "Skills list cannot be null (can be empty list)")
     private List<String> skills; // List of skills
 
+    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is mandatory")
+    private String email; // New field for email
 }

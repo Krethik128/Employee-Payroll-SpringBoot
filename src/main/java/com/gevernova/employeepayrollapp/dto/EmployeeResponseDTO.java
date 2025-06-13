@@ -17,4 +17,5 @@ public class EmployeeResponseDTO {
     private long salary;
     private String phoneNumber;
     private List<String> skills;
+    private String email;
 }
