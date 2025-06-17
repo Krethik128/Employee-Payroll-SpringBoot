@@ -24,5 +24,14 @@ public class RabbitMQConsumer {
 
         logger.info("Welcome email sent to: " + message.get("email"));
     }
+
+    @RabbitListener(queues = "${rabbitmq.queue.name}")
+    public void receiveEmployeeUpdateNotification(Map<String, String> message ){
+        logger.info("Received employee update notification from queue: " + message);
+        // Parse message to extract email and name
+        emailService.sendEmailUpdatedMessage(message.get("email"), message.get("name"));// Call the new mail sending method
+
+        logger.info("Update email sent to: " + message.get("email"));
+    }
 }
 

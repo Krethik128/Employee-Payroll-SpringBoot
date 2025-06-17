@@ -13,7 +13,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
-public class EmployeePayrollExceptionHandler { // Or GlobalExceptionHandler
+//The prime role of this exception handler is to transform exceptions into standardized,
+// client-friendly HTTP responses
+public class EmployeePayrollExceptionHandler {
 
     private static final Logger logger = Logger.getLogger(EmployeePayrollExceptionHandler.class.getName());
 
@@ -31,7 +33,6 @@ public class EmployeePayrollExceptionHandler { // Or GlobalExceptionHandler
 
     @ExceptionHandler(EmployeeNotFoundException.class)
     public ResponseEntity<ResponseDTO> handleEmployeeNotFoundException(EmployeeNotFoundException exception) {
-        logger.warning("Handling EmployeeNotFoundException: " + exception.getMessage());
         ResponseDTO responseDTO = new ResponseDTO("Invalid Employee ID", exception.getMessage());
         return new ResponseEntity<>(responseDTO, HttpStatus.NOT_FOUND);
     }
